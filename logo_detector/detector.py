@@ -38,7 +38,9 @@ class DetectorParams:
     mser_scales: Tuple[float, ...] = (1.0, 0.85, 0.7)
     contour_scales: Tuple[float, ...] = (1.0, 0.75, 0.6, 0.5)
     keypoint_scales: Tuple[float, ...] = (1.0, 0.7, 0.5)
+    text_scales: Tuple[float, ...] = (1.0, 0.8)
     use_keypoint_props: bool = True
+    use_text_props: bool = True
     global_nms_iou: float = 0.5
 
 
@@ -96,7 +98,11 @@ class LogoDetector:
             p_logo = 1.0
             if self.binary_filter is not None:
                 p_logo = float(self.binary_filter.predict_proba(feat)[0, 1])
-                if p_logo < params.bin_threshold:
+                area_ratio = max(1e-6, (x2 - x1) * (y2 - y1) / float(H * W))
+                thr = params.bin_threshold
+                if area_ratio > 0.5:
+                    thr = min(thr, 0.8)
+                if p_logo < thr:
                     continue
 
             _, pred = self.svm.predict(feat)
@@ -117,6 +123,16 @@ class LogoDetector:
             scores = [d[1] for d in final]
             keep = nms(boxes, scores, iou_thr=params.global_nms_iou)
             final = [final[i] for i in keep]
+        if len(final) > 1:
+            H, W = img_bgr.shape[:2]
+            dominant = []
+            for det in final:
+                x1, y1, x2, y2 = det[2]
+                area_ratio = (x2 - x1) * (y2 - y1) / float(H * W)
+                if area_ratio > 0.5:
+                    dominant.append(det)
+            if dominant:
+                final = dominant
         return final
 
     def detect_file(self, image_path: Path, **kwargs) -> List[Tuple[str, float, Tuple[int, int, int, int]]]:
@@ -138,6 +154,8 @@ class LogoDetector:
             boxes.extend(contour_candidates(img, scales=cfg.contour_scales))
             if cfg.use_keypoint_props:
                 boxes.extend(keypoint_candidates(img, scales=cfg.keypoint_scales))
+            if cfg.use_text_props:
+                boxes.extend(text_candidates(img, scales=cfg.text_scales))
         if cfg.candidate_mode not in ("mser", "combined"):
             raise ValueError(f"Unknown candidate mode '{cfg.candidate_mode}'")
         return _deduplicate_boxes(boxes)
@@ -427,6 +445,60 @@ def keypoint_candidates(
             area_ratio = (w * h) / float(W * H)
             if area_ratio < 4e-5 or area_ratio > 0.35:
                 continue
+            if abs(s - 1.0) >= 1e-3:
+                inv = 1.0 / s
+                x = int(x * inv)
+                y = int(y * inv)
+                w = int(w * inv)
+                h = int(h * inv)
+            boxes.append((max(0, x), max(0, y), min(W0, x + w), min(H0, y + h)))
+    return boxes
+
+
+def text_candidates(
+    img_bgr: np.ndarray,
+    scales: Sequence[float] = (1.0, 0.8),
+    grad_thresh: float = 0.15,
+) -> List[Tuple[int, int, int, int]]:
+    boxes: List[Tuple[int, int, int, int]] = []
+    H0, W0 = img_bgr.shape[:2]
+    for s in scales or (1.0,):
+        if s <= 0:
+            continue
+        if abs(s - 1.0) < 1e-3:
+            scaled = img_bgr
+            H, W = H0, W0
+        else:
+            W = max(1, int(W0 * s))
+            H = max(1, int(H0 * s))
+            scaled = cv2.resize(img_bgr, (W, H), interpolation=cv2.INTER_AREA)
+        gray = cv2.cvtColor(scaled, cv2.COLOR_BGR2GRAY)
+        gray = cv2.GaussianBlur(gray, (3, 3), 0)
+        grad_x = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3)
+        grad_y = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3)
+        mag = cv2.magnitude(grad_x, grad_y)
+        mag_norm = cv2.normalize(mag, None, 0, 1, cv2.NORM_MINMAX)
+        _, mask = cv2.threshold(mag_norm, grad_thresh, 1.0, cv2.THRESH_BINARY)
+        mask = (mask * 255).astype(np.uint8)
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (21, 5))
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=2)
+        mask = cv2.dilate(mask, np.ones((5, 3), np.uint8), iterations=1)
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        for cnt in contours:
+            x, y, w, h = cv2.boundingRect(cnt)
+            if w * h < 80 or h < 8:
+                continue
+            ar = w / max(1, h)
+            if not (0.5 <= ar <= 10.0):
+                continue
+            area_ratio = (w * h) / float(W * H)
+            if area_ratio < 5e-5 or area_ratio > 0.85:
+                continue
+            pad = 0.15 if area_ratio < 0.4 else 0.05
+            x = max(0, int(x - w * pad))
+            y = max(0, int(y - h * pad))
+            w = min(W - x, int(w * (1 + 2 * pad)))
+            h = min(H - y, int(h * (1 + 2 * pad)))
             if abs(s - 1.0) >= 1e-3:
                 inv = 1.0 / s
                 x = int(x * inv)
