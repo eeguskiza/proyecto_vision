@@ -1,1 +1,90 @@
-# compcars-classic
+# Classical Logo Detector (OpenCV + SVM)
+
+## Propósito del proyecto
+El objetivo es construir un sistema clásico (sin redes neuronales) capaz de detectar y clasificar logotipos en imágenes. Para ello se combinan detectores tradicionales de OpenCV (MSER, contornos y agrupaciones de keypoints) con descriptores BoW+HSV+HOG y un clasificador SVM multiclase. Un filtro binario adicional (SVM lineal calibrado) decide si un candidato es logo o fondo antes de pasar al clasificador final.
+
+## Dataset disponible
+El repositorio asume una estructura tipo Pascal/VOC en `data/`:
+
+```
+data/
+├── train/
+│   ├── brand_1/
+│   │   ├── xxx.jpg
+│   │   └── xxx.xml
+│   └── ...
+├── valid/
+└── test/
+```
+
+Cada imagen tiene su XML con anotaciones `object/name` y caja `xmin,ymin,xmax,ymax`. El dataset cubre ~30 clases de logos automoción/retail (Ferrari, Milka, FedEx, etc.) y está equilibrado en tres splits (`train`, `valid`, `test`). Durante la fase de preparación generamos:
+- `data/interim/annotations.csv`: CSV con todas las anotaciones fusionadas.
+- `data/processed/patches_manifest.csv` + `data/processed/patches/`: parches 128×128 por logo, usados para entrenar el SVM multiclase.
+
+## Estructura del repositorio
+```
+.
+├── data/                # dataset VOC original + artefactos interim/processed
+├── logo_detector/       # paquete Python con toda la lógica (paths, data prep, features, detector)
+│   ├── data_prep.py     # parsea VOC, recorta parches
+│   ├── features.py      # BoW+HSV+HOG y utilidades
+│   ├── classifier.py    # entrenamiento del SVM multiclase (OpenCV)
+│   └── detector.py      # pipelines MSER/contornos/keypoints + filtros y evaluación
+├── models/              # artefactos entrenados (vocab, SVM, filtro binario, stats)
+├── reports/figures/     # visualizaciones generadas (detecciones vs GT, etc.)
+├── requirements.txt     # dependencias (opencv-python, numpy, pandas, scikit-learn, matplotlib)
+└── main.py              # CLI central para reproducir todo el flujo
+```
+
+## Flujo completo (comandos reproducibles)
+
+1. **Instalar dependencias**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Preparar anotaciones (fusiona XMLs en un CSV)**
+   ```bash
+   python3 main.py prepare-annotations
+   ```
+   Genera `data/interim/annotations.csv` con todas las cajas y splits.
+
+3. **Recortar parches de logos**
+   ```bash
+   python3 main.py crop-patches
+   ```
+   Crea `data/processed/patches_manifest.csv` y los recortes 128×128 en `data/processed/patches/`.
+
+4. **Entrenar el clasificador BoW+HSV+HOG + SVM (multiclase)**
+   ```bash
+   python3 main.py train-classifier
+   ```
+   Guarda vocabulario, medias/sigmas, orden de clases y el SVM en `models/`.
+
+5. **Entrenar el detector clásico (MSER + contornos + keypoints + filtro binario)**
+   ```bash
+   python3 main.py train-detector
+   ```
+   Produce `models/logo_filter.joblib` (SVM lineal calibrado) y recopila métricas del filtro.
+
+6. **Evaluar el pipeline completo**
+   ```bash
+   python3 main.py evaluate --split test \
+     --bin-thresh 0.85 --min-kp 8 --topk 1 --global-nms 0.5
+   ```
+   Ajusta los parámetros (`--bin-thresh`, `--global-nms`, etc.) según el balance precisión/recall que busques.
+
+7. **Inspeccionar detecciones en imágenes aleatorias**
+   ```bash
+   python3 main.py detect 5 \
+     --bin-thresh 0.9 --min-kp 9 --global-nms 0.35 \
+     --output-dir reports/figures/demo --show
+   ```
+   Muestra lado a lado la Ground Truth (verde) y las predicciones (rojo); guarda las figuras en `reports/figures/demo`. Quita `--show` si sólo quieres los archivos. Para un único archivo, usa `python3 main.py detect 0 --image ruta.jpg [flags]`.
+
+## Notas finales
+- Todos los artefactos se regeneran con los pasos anteriores; no hay notebooks en el flujo final.
+- El rendimiento depende de los umbrales elegidos:
+  - Configuración balanceada (por defecto) → precisión ~0.23, recall ~0.18 en test.
+  - Configuración orientada a precisión (`--bin-thresh 0.9`, `--global-nms 0.35`, `--min-kp 9`) → precisión ~0.30, a costa de recall bajo (~0.10).
+- La carpeta `reports/figures/` contiene ejemplos generados con `detect` para inspección rápida.

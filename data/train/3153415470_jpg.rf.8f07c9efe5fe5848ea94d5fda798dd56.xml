@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>3153415470_jpg.rf.8f07c9efe5fe5848ea94d5fda798dd56.jpg</filename>
+	<path>3153415470_jpg.rf.8f07c9efe5fe5848ea94d5fda798dd56.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>chimay</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>247</xmin>
+			<xmax>498</xmax>
+			<ymin>123</ymin>
+			<ymax>447</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

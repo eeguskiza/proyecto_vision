@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>154915220_jpg.rf.0f9047e281685a930d79722425e03548.jpg</filename>
+	<path>154915220_jpg.rf.0f9047e281685a930d79722425e03548.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>carlsberg</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>188</xmin>
+			<xmax>214</xmax>
+			<ymin>319</ymin>
+			<ymax>390</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

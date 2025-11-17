@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>1351678434_jpg.rf.6d7a8bdb2b400d38f9530a824333357e.jpg</filename>
+	<path>1351678434_jpg.rf.6d7a8bdb2b400d38f9530a824333357e.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>fosters</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>332</xmin>
+			<xmax>544</xmax>
+			<ymin>62</ymin>
+			<ymax>292</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

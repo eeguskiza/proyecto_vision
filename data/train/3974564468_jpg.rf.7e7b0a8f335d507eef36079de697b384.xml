@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>3974564468_jpg.rf.7e7b0a8f335d507eef36079de697b384.jpg</filename>
+	<path>3974564468_jpg.rf.7e7b0a8f335d507eef36079de697b384.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>erdinger</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>253</xmin>
+			<xmax>440</xmax>
+			<ymin>153</ymin>
+			<ymax>278</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

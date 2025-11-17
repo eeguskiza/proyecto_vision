@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>3266564307_jpg.rf.9965c32e34ac5e559010fe7b1c6cf21f.jpg</filename>
+	<path>3266564307_jpg.rf.9965c32e34ac5e559010fe7b1c6cf21f.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>carlsberg</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>250</xmin>
+			<xmax>621</xmax>
+			<ymin>41</ymin>
+			<ymax>640</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

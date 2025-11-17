@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>578792900_jpg.rf.098e2c1da5182be0bb1094b40c66a0dd.jpg</filename>
+	<path>578792900_jpg.rf.098e2c1da5182be0bb1094b40c66a0dd.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>nvidia</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>226</xmin>
+			<xmax>392</xmax>
+			<ymin>143</ymin>
+			<ymax>287</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

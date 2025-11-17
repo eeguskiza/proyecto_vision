@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>2221783992_jpg.rf.2b4bc46f0e1b6e6cf98b89e9f7262eeb.jpg</filename>
+	<path>2221783992_jpg.rf.2b4bc46f0e1b6e6cf98b89e9f7262eeb.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>ups</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>490</xmin>
+			<xmax>517</xmax>
+			<ymin>202</ymin>
+			<ymax>249</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

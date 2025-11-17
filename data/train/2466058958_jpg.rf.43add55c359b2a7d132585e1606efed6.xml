@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>2466058958_jpg.rf.43add55c359b2a7d132585e1606efed6.jpg</filename>
+	<path>2466058958_jpg.rf.43add55c359b2a7d132585e1606efed6.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>cocacola</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>175</xmin>
+			<xmax>308</xmax>
+			<ymin>124</ymin>
+			<ymax>485</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

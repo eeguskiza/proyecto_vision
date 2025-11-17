@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>5157772812_jpg.rf.b242d5110ad3140a9f1e7f137d807d15.jpg</filename>
+	<path>5157772812_jpg.rf.b242d5110ad3140a9f1e7f137d807d15.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>esso</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>424</xmin>
+			<xmax>469</xmax>
+			<ymin>216</ymin>
+			<ymax>269</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

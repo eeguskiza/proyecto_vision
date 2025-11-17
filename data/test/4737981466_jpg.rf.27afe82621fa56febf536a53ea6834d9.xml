@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>4737981466_jpg.rf.27afe82621fa56febf536a53ea6834d9.jpg</filename>
+	<path>4737981466_jpg.rf.27afe82621fa56febf536a53ea6834d9.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>fedex</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>38</xmin>
+			<xmax>612</xmax>
+			<ymin>100</ymin>
+			<ymax>341</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

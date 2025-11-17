@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>3027174383_jpg.rf.4fb6ef46fcfb01bc081f0efc949cfdaf.jpg</filename>
+	<path>3027174383_jpg.rf.4fb6ef46fcfb01bc081f0efc949cfdaf.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>milka</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>323</xmin>
+			<xmax>499</xmax>
+			<ymin>339</ymin>
+			<ymax>417</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

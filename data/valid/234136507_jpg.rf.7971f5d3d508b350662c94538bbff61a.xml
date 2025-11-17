@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>234136507_jpg.rf.7971f5d3d508b350662c94538bbff61a.jpg</filename>
+	<path>234136507_jpg.rf.7971f5d3d508b350662c94538bbff61a.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>becks</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>103</xmin>
+			<xmax>484</xmax>
+			<ymin>136</ymin>
+			<ymax>618</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

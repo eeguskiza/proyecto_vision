@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>3179797951_jpg.rf.3ea25c3fb7439cf0a3534da5e05ec1d3.jpg</filename>
+	<path>3179797951_jpg.rf.3ea25c3fb7439cf0a3534da5e05ec1d3.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>ford</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>316</xmin>
+			<xmax>464</xmax>
+			<ymin>71</ymin>
+			<ymax>205</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

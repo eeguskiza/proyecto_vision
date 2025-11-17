@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>3286394939_jpg.rf.0a795a42a1a99e9de004368cb52fa883.jpg</filename>
+	<path>3286394939_jpg.rf.0a795a42a1a99e9de004368cb52fa883.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>stellaartois</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>192</xmin>
+			<xmax>433</xmax>
+			<ymin>388</ymin>
+			<ymax>622</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

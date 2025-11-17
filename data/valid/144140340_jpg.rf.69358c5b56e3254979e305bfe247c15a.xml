@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>144140340_jpg.rf.69358c5b56e3254979e305bfe247c15a.jpg</filename>
+	<path>144140340_jpg.rf.69358c5b56e3254979e305bfe247c15a.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>shell</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>72</xmin>
+			<xmax>621</xmax>
+			<ymin>94</ymin>
+			<ymax>504</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

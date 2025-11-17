@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>5037589552_jpg.rf.2a0fb99593abcb77057db551124aa433.jpg</filename>
+	<path>5037589552_jpg.rf.2a0fb99593abcb77057db551124aa433.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>corona</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>3</xmin>
+			<xmax>517</xmax>
+			<ymin>287</ymin>
+			<ymax>640</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>2442460435_jpg.rf.c739bd0f07aebc611bf96648ab9251b8.jpg</filename>
+	<path>2442460435_jpg.rf.c739bd0f07aebc611bf96648ab9251b8.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>bmw</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>191</xmin>
+			<xmax>495</xmax>
+			<ymin>113</ymin>
+			<ymax>553</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

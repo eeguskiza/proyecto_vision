@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>3987046252_jpg.rf.248bd07c1d03a1a816b1d75340e8097c.jpg</filename>
+	<path>3987046252_jpg.rf.248bd07c1d03a1a816b1d75340e8097c.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>paulaner</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>188</xmin>
+			<xmax>267</xmax>
+			<ymin>166</ymin>
+			<ymax>283</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>3240012674_jpg.rf.3e5402c0385bb44a6dbb15dd8f2ab2bf.jpg</filename>
+	<path>3240012674_jpg.rf.3e5402c0385bb44a6dbb15dd8f2ab2bf.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>tsingtao</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>215</xmin>
+			<xmax>392</xmax>
+			<ymin>333</ymin>
+			<ymax>523</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

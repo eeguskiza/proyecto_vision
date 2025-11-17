@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>3178281216_jpg.rf.5fbfba92c99ab038e81907763620a594.jpg</filename>
+	<path>3178281216_jpg.rf.5fbfba92c99ab038e81907763620a594.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>heineken</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>94</xmin>
+			<xmax>256</xmax>
+			<ymin>347</ymin>
+			<ymax>510</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

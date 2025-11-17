@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>5090152785_jpg.rf.d8148f7b8f9f761e85755a96d86acb3a.jpg</filename>
+	<path>5090152785_jpg.rf.d8148f7b8f9f761e85755a96d86acb3a.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>aldi</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>177</xmin>
+			<xmax>207</xmax>
+			<ymin>150</ymin>
+			<ymax>212</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

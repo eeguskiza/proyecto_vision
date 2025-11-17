@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>2332445179_jpg.rf.4625307cf0a6f8d65d5fa631c1fb54fe.jpg</filename>
+	<path>2332445179_jpg.rf.4625307cf0a6f8d65d5fa631c1fb54fe.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>rittersport</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>270</xmin>
+			<xmax>407</xmax>
+			<ymin>76</ymin>
+			<ymax>146</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

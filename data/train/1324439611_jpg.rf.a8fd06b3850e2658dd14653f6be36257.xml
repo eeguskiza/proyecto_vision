@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>1324439611_jpg.rf.a8fd06b3850e2658dd14653f6be36257.jpg</filename>
+	<path>1324439611_jpg.rf.a8fd06b3850e2658dd14653f6be36257.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>guiness</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>48</xmin>
+			<xmax>372</xmax>
+			<ymin>137</ymin>
+			<ymax>368</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>2846835180_jpg.rf.2fc585934190f0cc4c4413d1aa70c449.jpg</filename>
+	<path>2846835180_jpg.rf.2fc585934190f0cc4c4413d1aa70c449.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>texaco</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>146</xmin>
+			<xmax>289</xmax>
+			<ymin>49</ymin>
+			<ymax>173</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

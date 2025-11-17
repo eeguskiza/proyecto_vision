@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>4828367488_jpg.rf.c83638e21673d3592c59400988c9491c.jpg</filename>
+	<path>4828367488_jpg.rf.c83638e21673d3592c59400988c9491c.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>ferrari</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>345</xmin>
+			<xmax>518</xmax>
+			<ymin>346</ymin>
+			<ymax>568</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

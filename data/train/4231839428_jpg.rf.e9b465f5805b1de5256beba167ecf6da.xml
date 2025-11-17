@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>4231839428_jpg.rf.e9b465f5805b1de5256beba167ecf6da.jpg</filename>
+	<path>4231839428_jpg.rf.e9b465f5805b1de5256beba167ecf6da.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>google</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>362</xmin>
+			<xmax>547</xmax>
+			<ymin>253</ymin>
+			<ymax>468</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

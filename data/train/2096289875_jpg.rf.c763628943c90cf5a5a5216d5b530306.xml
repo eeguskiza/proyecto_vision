@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>2096289875_jpg.rf.c763628943c90cf5a5a5216d5b530306.jpg</filename>
+	<path>2096289875_jpg.rf.c763628943c90cf5a5a5216d5b530306.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>singha</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>355</xmin>
+			<xmax>569</xmax>
+			<ymin>178</ymin>
+			<ymax>326</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

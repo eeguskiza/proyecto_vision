@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>389718249_jpg.rf.f8a75c6401e1d4f8de721534cc8c3707.jpg</filename>
+	<path>389718249_jpg.rf.f8a75c6401e1d4f8de721534cc8c3707.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>pepsi</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>95</xmin>
+			<xmax>214</xmax>
+			<ymin>207</ymin>
+			<ymax>377</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

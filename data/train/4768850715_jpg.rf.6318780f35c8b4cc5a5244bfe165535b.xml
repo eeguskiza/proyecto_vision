@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>4768850715_jpg.rf.6318780f35c8b4cc5a5244bfe165535b.jpg</filename>
+	<path>4768850715_jpg.rf.6318780f35c8b4cc5a5244bfe165535b.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>HP</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>69</xmin>
+			<xmax>137</xmax>
+			<ymin>37</ymin>
+			<ymax>75</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>

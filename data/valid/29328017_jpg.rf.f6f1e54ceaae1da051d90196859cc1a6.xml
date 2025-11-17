@@ -1,0 +1,29 @@
+<annotation>
+	<folder></folder>
+	<filename>29328017_jpg.rf.f6f1e54ceaae1da051d90196859cc1a6.jpg</filename>
+	<path>29328017_jpg.rf.f6f1e54ceaae1da051d90196859cc1a6.jpg</path>
+	<source>
+		<database>roboflow.com</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>starbucks</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>437</xmin>
+			<xmax>545</xmax>
+			<ymin>143</ymin>
+			<ymax>296</ymax>
+		</bndbox>
+	</object>
+	<metadata>
+	</metadata>
+</annotation>
