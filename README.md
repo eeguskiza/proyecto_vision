@@ -59,7 +59,7 @@ Cada imagen tiene su XML con anotaciones `object/name` y caja `xmin,ymin,xmax,ym
    ```bash
    python3 main.py train-classifier
    ```
-   Guarda vocabulario, medias/sigmas, orden de clases y el SVM en `models/`.
+   Guarda vocabulario, medias/sigmas, orden de clases y el SVM en `models/`, además de prototipos de color por clase (`models/color_prototypes.json`) usados en el re-ranking.
 
 5. **Entrenar el detector clásico (MSER + contornos + keypoints + filtro binario)**
    ```bash
@@ -82,9 +82,16 @@ Cada imagen tiene su XML con anotaciones `object/name` y caja `xmin,ymin,xmax,ym
    ```
    Muestra lado a lado la Ground Truth (verde) y las predicciones (rojo); guarda las figuras en `reports/figures/demo`. Quita `--show` si sólo quieres los archivos. Para un único archivo, usa `python3 main.py detect 0 --image ruta.jpg [flags]`.
 
+## Versiones del pipeline
+
+| Versión | Cambios principales | Métricas orientativas (split test) |
+| --- | --- | --- |
+| **V1** | Propuestas MSER + contornos + keypoints; SVM BoW+HSV+HOG; filtro binario clásico | Config. balanceada (por defecto): P≈0.23 / R≈0.18 / F1≈0.20. Config. alta precisión (`--bin-thresh 0.9`, `--global-nms 0.35`, `--min-kp 9`): P≈0.30 / R≈0.10. |
+| **V2 (actual)** | Añade generador de texto (gradientes y morfología), sliding windows con puntuación por gradiente y re-ranking por prototipos de color (se descartan predicciones cuya paleta no coincide con la clase). El filtro binario reduce el umbral en cajas dominantes (>50 % del frame) para cubrir carteles completos y existe un NMS cruzado para eliminar duplicados dentro del mismo letrero. | Config. balanceada (por defecto): P≈0.20 / R≈0.13 / F1≈0.16 (más recall en logos pequeños y carteles). Config. alta precisión (`--bin-thresh 0.9`, `--global-nms 0.35`, `--min-kp 9`): P≈0.20 / R≈0.08 / F1≈0.11. Config. recall alto (`--bin-thresh 0.761`, `--topk 2`, `--global-nms 0`, `--no-keyprops`): P≈0.13 / R≈0.25 / F1≈0.17. |
+
+> Nota: V2 prioriza cubrir casos difíciles (carteles de texto completos y logos muy grandes). Si necesitas el comportamiento más estricto de V1, basta con desactivar los nuevos generadores (`--global-nms 0.5 --bin-thresh 0.85 --min-kp 8 --topk 1`).
+
 ## Notas finales
-- Todos los artefactos se regeneran con los pasos anteriores; no hay notebooks en el flujo final.
-- El rendimiento depende de los umbrales elegidos:
-  - Configuración balanceada (por defecto) → precisión ~0.23, recall ~0.18 en test.
-  - Configuración orientada a precisión (`--bin-thresh 0.9`, `--global-nms 0.35`, `--min-kp 9`) → precisión ~0.30, a costa de recall bajo (~0.10).
-- La carpeta `reports/figures/` contiene ejemplos generados con `detect` para inspección rápida.
+- Todos los artefactos se regeneran con los pasos anteriores; no hay notebooks en el flujo actual.
+- Puedes desactivar cada tipo de candidato con los flags `--no-keyprops`, `--no-textprops`, `--no-slideprops` en `detect/evaluate` para comparar su impacto.
+- Ajusta los flags de `detect/evaluate` para adaptarte a precisión vs recall. La carpeta `reports/figures/` contiene los ejemplos generados (GT vs pred).

@@ -120,6 +120,9 @@ def train_classifier(
     print(f"Model saved to {svm_path}")
     print(f"Label order saved to {paths.MODELS_DIR / 'labels.json'}")
     print(f"Confusion matrix saved to {cm_path}")
+    proto_path = paths.MODELS_DIR / "color_prototypes.json"
+    build_color_prototypes(train_df, proto_path)
+    print(f"Color prototypes saved to {proto_path}")
     return metrics
 
 
@@ -130,3 +133,28 @@ def _confusion_matrix(model: cv2.ml_SVM, X: np.ndarray, y_true: np.ndarray, n_cl
     for t, p in zip(y_true, pred):
         cm[t, p] += 1
     return cm
+
+
+def build_color_prototypes(df: pd.DataFrame, out_path: Path) -> None:
+    prototypes = {}
+    for cls, sub in df.groupby("class"):
+        hists = []
+        for path in sub["patch_path"]:
+            img = cv2.imread(path)
+            if img is None:
+                continue
+            hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+            hist = cv2.calcHist([hsv], [0, 1, 2], None, [8, 8, 8], [0, 180, 0, 256, 0, 256]).astype(np.float32)
+            hist = hist.flatten()
+            s = hist.sum()
+            if s > 0:
+                hist /= s
+            hists.append(hist)
+        if hists:
+            mean_hist = np.mean(hists, axis=0)
+            s = mean_hist.sum()
+            if s > 0:
+                mean_hist /= s
+            prototypes[cls] = {"hist": mean_hist.tolist()}
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(prototypes, f, indent=2)

@@ -41,6 +41,17 @@ class DetectorParams:
     text_scales: Tuple[float, ...] = (1.0, 0.8)
     use_keypoint_props: bool = True
     use_text_props: bool = True
+    use_sliding_windows: bool = True
+    sliding_window_sizes: Tuple[Tuple[int, int], ...] = (
+        (160, 120),
+        (200, 150),
+        (260, 180),
+        (320, 220),
+        (420, 280),
+        (520, 320),
+    )
+    sliding_window_step_ratio: float = 0.35
+    sliding_window_grad_thresh: float = 0.18
     global_nms_iou: float = 0.5
 
 
@@ -69,6 +80,7 @@ class LogoDetector:
             self.binary_filter = joblib.load(self.binary_model_path)
             print(f"[INFO] Binary filter loaded from {self.binary_model_path}")
         self._mser = _build_mser(preset=candidate_preset)
+        self.class_prototypes = _load_color_prototypes(self.models_dir / "color_prototypes.json")
 
     def detect(
         self,
@@ -101,7 +113,7 @@ class LogoDetector:
                 area_ratio = max(1e-6, (x2 - x1) * (y2 - y1) / float(H * W))
                 thr = params.bin_threshold
                 if area_ratio > 0.5:
-                    thr = min(thr, 0.8)
+                    thr = min(thr, max(0.55, params.bin_threshold - 0.2))
                 if p_logo < thr:
                     continue
 
@@ -109,6 +121,9 @@ class LogoDetector:
             cls_id = int(pred.ravel()[0])
             resp = float(np.mean([kp.response for kp in kps]))
             score = p_logo * max(1e-3, resp) * len(kps)
+            if self.class_prototypes:
+                color_score = _color_match_score(patch, self.classes[cls_id], self.class_prototypes)
+                score *= color_score
             detections.append((cls_id, score, (x1, y1, x2, y2)))
 
         final: List[Tuple[str, float, Tuple[int, int, int, int]]] = []
@@ -156,6 +171,15 @@ class LogoDetector:
                 boxes.extend(keypoint_candidates(img, scales=cfg.keypoint_scales))
             if cfg.use_text_props:
                 boxes.extend(text_candidates(img, scales=cfg.text_scales))
+            if cfg.use_sliding_windows:
+                boxes.extend(
+                    sliding_window_candidates(
+                        img,
+                        window_sizes=cfg.sliding_window_sizes,
+                        step_ratio=cfg.sliding_window_step_ratio,
+                        grad_thresh=cfg.sliding_window_grad_thresh,
+                    )
+                )
         if cfg.candidate_mode not in ("mser", "combined"):
             raise ValueError(f"Unknown candidate mode '{cfg.candidate_mode}'")
         return _deduplicate_boxes(boxes)
@@ -507,6 +531,75 @@ def text_candidates(
                 h = int(h * inv)
             boxes.append((max(0, x), max(0, y), min(W0, x + w), min(H0, y + h)))
     return boxes
+
+
+def sliding_window_candidates(
+    img_bgr: np.ndarray,
+    window_sizes: Sequence[Tuple[int, int]],
+    step_ratio: float = 0.35,
+    grad_thresh: float = 0.18,
+) -> List[Tuple[int, int, int, int]]:
+    gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+    gray = cv2.GaussianBlur(gray, (3, 3), 0)
+    grad_x = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3)
+    grad_y = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3)
+    mag = cv2.magnitude(grad_x, grad_y)
+    mag_norm = cv2.normalize(mag, None, 0, 1, cv2.NORM_MINMAX)
+    integ = cv2.integral(mag_norm)
+    H, W = gray.shape[:2]
+    boxes: List[Tuple[int, int, int, int]] = []
+    for (w, h) in window_sizes:
+        w = max(24, min(W, int(w)))
+        h = max(24, min(H, int(h)))
+        if w >= W or h >= H:
+            continue
+        step = max(12, int(min(w, h) * step_ratio))
+        for y in range(0, H - h + 1, step):
+            y2 = y + h
+            row1 = integ[y]
+            row2 = integ[y2]
+            for x in range(0, W - w + 1, step):
+                x2 = x + w
+                total = row2[x2] - row2[x] - row1[x2] + row1[x]
+                score = total / (w * h)
+                if score < grad_thresh:
+                    continue
+                ar = w / max(1, h)
+                if not (0.4 <= ar <= 5.0):
+                    continue
+                area_ratio = (w * h) / float(W * H)
+                if area_ratio < 8e-4 or area_ratio > 0.6:
+                    continue
+                boxes.append((x, y, x2, y2))
+    return boxes
+
+
+def _load_color_prototypes(path: Path) -> Dict[str, Dict[str, np.ndarray]]:
+    if not path.exists():
+        return {}
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    prototypes = {}
+    for cls, proto in data.items():
+        prototypes[cls] = {"hist": np.array(proto["hist"], dtype=np.float32)}
+    return prototypes
+
+
+def _color_match_score(patch: np.ndarray, cls: str, prototypes: Dict[str, Dict[str, np.ndarray]]) -> float:
+    proto = prototypes.get(cls)
+    if proto is None:
+        return 1.0
+    if patch is None or patch.size == 0:
+        return 0.5
+    hsv = cv2.cvtColor(patch, cv2.COLOR_BGR2HSV)
+    hist = cv2.calcHist([hsv], [0, 1, 2], None, [8, 8, 8], [0, 180, 0, 256, 0, 256]).astype(np.float32)
+    hist = hist.flatten()
+    total = hist.sum()
+    if total > 0:
+        hist /= total
+    score = cv2.compareHist(hist.astype(np.float32), proto["hist"], cv2.HISTCMP_BHATTACHARYYA)
+    score = max(1e-3, 1.0 - score)
+    return float(score)
 
 
 def pad_box(box: Tuple[int, int, int, int], H: int, W: int, pad: float = 0.15) -> Tuple[int, int, int, int]:

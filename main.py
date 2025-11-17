@@ -81,6 +81,9 @@ def cmd_detect(args: argparse.Namespace) -> None:
         top_k_per_class=args.topk,
         bin_threshold=args.bin_thresh,
         candidate_mode=args.candidate_mode,
+        use_keypoint_props=not args.no_keyprops,
+        use_text_props=not args.no_textprops,
+        use_sliding_windows=not args.no_slideprops,
         global_nms_iou=args.global_nms,
     )
     det = detector.LogoDetector(models_dir=args.models)
@@ -174,6 +177,9 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
         candidate_mode=args.candidate_mode,
         limit_images=args.limit,
         iou_threshold=args.iou,
+        use_keypoint_props=not args.no_keyprops,
+        use_text_props=not args.no_textprops,
+        use_sliding_windows=not args.no_slideprops,
         global_nms_iou=args.global_nms,
     )
     det = detector.LogoDetector(models_dir=args.models)
@@ -230,6 +236,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_detect.add_argument("--pad", type=float, default=0.1, help="Relative padding around proposals.")
     p_detect.add_argument("--bin-thresh", type=float, default=0.85, help="Probability threshold for the binary filter.")
     p_detect.add_argument("--global-nms", type=float, default=0.5, help="IoU for cross-class NMS (0 disables).")
+    p_detect.add_argument("--no-keyprops", action="store_true", help="Disable keypoint-based candidates.")
+    p_detect.add_argument("--no-textprops", action="store_true", help="Disable text-based candidates.")
+    p_detect.add_argument("--no-slideprops", action="store_true", help="Disable sliding-window candidates.")
     p_detect.add_argument("--split", choices=["train", "val", "test"], default="test", help="Split to sample images from.")
     p_detect.add_argument("--annotations", type=str, default=None, help="Annotation CSV to sample (default: data/interim/annotations.csv).")
     p_detect.add_argument("--output-dir", type=str, default=None, help="Optional folder to save visualizations.")
@@ -247,6 +256,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_eval.add_argument("--pad", type=float, default=0.1)
     p_eval.add_argument("--bin-thresh", type=float, default=0.85)
     p_eval.add_argument("--global-nms", type=float, default=0.5, help="IoU for cross-class NMS (0 disables).")
+    p_eval.add_argument("--no-keyprops", action="store_true", help="Disable keypoint-based candidates.")
+    p_eval.add_argument("--no-textprops", action="store_true", help="Disable text-based candidates.")
+    p_eval.add_argument("--no-slideprops", action="store_true", help="Disable sliding-window candidates.")
     p_eval.add_argument("--limit", type=int, default=None, help="Optional max images.")
     p_eval.add_argument("--iou", type=float, default=0.5, help="IoU threshold.")
     p_eval.set_defaults(func=cmd_evaluate)
