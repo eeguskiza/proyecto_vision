@@ -1,0 +1,10 @@
+__pycache__/
+.DS_Store
+*.pyc
+reports/figures/
+reports/*.csv
+models/
+data/interim/
+data/processed/patches/
+data/processed/patches_manifest.csv
+data/interim/annotations.csv

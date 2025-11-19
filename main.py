@@ -85,6 +85,7 @@ def cmd_detect(args: argparse.Namespace) -> None:
         use_text_props=not args.no_textprops,
         use_sliding_windows=not args.no_slideprops,
         global_nms_iou=args.global_nms,
+        max_total_detections=args.max_total,
     )
     det = detector.LogoDetector(models_dir=args.models)
     if args.count and args.count > 0:
@@ -181,10 +182,119 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
         use_text_props=not args.no_textprops,
         use_sliding_windows=not args.no_slideprops,
         global_nms_iou=args.global_nms,
+        max_total_detections=args.max_total,
     )
     det = detector.LogoDetector(models_dir=args.models)
     metrics = detector.evaluate_detector(det, split=args.split, params=params)
     print(json.dumps(metrics, indent=2))
+
+
+def cmd_oracle_classify(args: argparse.Namespace) -> None:
+    annotations = Path(args.annotations) if args.annotations else paths.ANNOTATIONS_CSV
+    df = pd.read_csv(annotations)
+    if args.split:
+        df = df[df["split"] == args.split]
+    if df.empty:
+        raise RuntimeError("No annotations found for the requested split.")
+    if args.limit:
+        df = df.head(args.limit)
+
+    det = detector.LogoDetector(models_dir=args.models)
+    total = correct = 0
+    per_class = {}
+    per_class_total = {}
+    results = []
+
+    for img_path, group in df.groupby("path"):
+        img = cv2.imread(img_path)
+        if img is None:
+            print(f"[WARN] Could not read {img_path}")
+            continue
+        for row in group.to_dict("records"):
+            cls = row["class"]
+            x1, y1, x2, y2 = map(int, (row["xmin"], row["ymin"], row["xmax"], row["ymax"]))
+            patch = img[y1:y2, x1:x2]
+            if patch.size == 0:
+                continue
+            pred_label, color_score = det.classify_patch(patch)
+            total += 1
+            per_class_total[cls] = per_class_total.get(cls, 0) + 1
+            is_correct = int(pred_label == cls)
+            correct += is_correct
+            per_class[cls] = per_class.get(cls, 0) + is_correct
+            if not is_correct and args.save_errors:
+                results.append(
+                    {
+                        "path": img_path,
+                        "true": cls,
+                        "pred": pred_label,
+                        "color_score": color_score,
+                        "bbox": (x1, y1, x2, y2),
+                    }
+                )
+
+    acc = correct / max(1, total)
+    print(f"Oracle classification accuracy ({args.split}): {correct}/{total} = {acc:.3f}")
+    per_cls_lines = []
+    for cls, tot in sorted(per_class_total.items(), key=lambda kv: kv[0]):
+        acc_cls = per_class.get(cls, 0) / tot
+        per_cls_lines.append(f"{cls:15s} {per_class.get(cls, 0):4d}/{tot:<4d} = {acc_cls:.3f}")
+    print("\nPer-class accuracy (oracle crops):")
+    print("\n".join(per_cls_lines))
+
+    if results and args.save_errors:
+        out_csv = Path(args.save_errors)
+        out_csv.parent.mkdir(parents=True, exist_ok=True)
+        pd.DataFrame(results).to_csv(out_csv, index=False)
+        print(f"Misclassifications saved to {out_csv}")
+
+
+def cmd_oracle_visualize(args: argparse.Namespace) -> None:
+    annotations = Path(args.annotations) if args.annotations else paths.ANNOTATIONS_CSV
+    df = pd.read_csv(annotations)
+    if args.split:
+        df = df[df["split"] == args.split]
+    if df.empty:
+        raise RuntimeError("No annotations found for the requested split.")
+
+    groups = df.groupby("path")
+    paths_list = list(groups.groups.keys())
+    if args.limit:
+        paths_list = paths_list[: args.limit]
+
+    det = detector.LogoDetector(models_dir=args.models)
+    out_dir = Path(args.output_dir) if args.output_dir else None
+    if out_dir:
+        out_dir.mkdir(parents=True, exist_ok=True)
+
+    for idx, img_path in enumerate(paths_list, 1):
+        img = cv2.imread(img_path)
+        if img is None:
+            print(f"[WARN] Could not read {img_path}")
+            continue
+        gt_rows = df[df["path"] == img_path]
+        vis = img.copy()
+        for _, row in gt_rows.iterrows():
+            cls = row["class"]
+            x1, y1, x2, y2 = map(int, (row["xmin"], row["ymin"], row["xmax"], row["ymax"]))
+            patch = img[y1:y2, x1:x2]
+            pred_label, color_score = det.classify_patch(patch)
+            correct = pred_label == cls
+            color = (0, 255, 0) if correct else (0, 0, 255)
+            cv2.rectangle(vis, (x1, y1), (x2, y2), color, 2)
+            text = f"{cls} -> {pred_label} ({color_score:.2f})"
+            cv2.putText(vis, text, (x1, max(0, y1 - 8)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+        if args.show:
+            cv2.imshow("oracle-visualize", vis)
+            key = cv2.waitKey(0)
+            if key == 27:
+                break
+        if out_dir:
+            out_file = out_dir / f"oracle_{Path(img_path).stem}.jpg"
+            cv2.imwrite(str(out_file), vis)
+        print(f"[{idx}/{len(paths_list)}] Saved oracle view for {img_path}")
+    if args.show:
+        cv2.destroyAllWindows()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -239,6 +349,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_detect.add_argument("--no-keyprops", action="store_true", help="Disable keypoint-based candidates.")
     p_detect.add_argument("--no-textprops", action="store_true", help="Disable text-based candidates.")
     p_detect.add_argument("--no-slideprops", action="store_true", help="Disable sliding-window candidates.")
+    p_detect.add_argument("--max-total", type=int, default=None, help="Max detections per image (after NMS).")
     p_detect.add_argument("--split", choices=["train", "val", "test"], default="test", help="Split to sample images from.")
     p_detect.add_argument("--annotations", type=str, default=None, help="Annotation CSV to sample (default: data/interim/annotations.csv).")
     p_detect.add_argument("--output-dir", type=str, default=None, help="Optional folder to save visualizations.")
@@ -259,9 +370,27 @@ def build_parser() -> argparse.ArgumentParser:
     p_eval.add_argument("--no-keyprops", action="store_true", help="Disable keypoint-based candidates.")
     p_eval.add_argument("--no-textprops", action="store_true", help="Disable text-based candidates.")
     p_eval.add_argument("--no-slideprops", action="store_true", help="Disable sliding-window candidates.")
+    p_eval.add_argument("--max-total", type=int, default=None, help="Max detections per image (after NMS).")
     p_eval.add_argument("--limit", type=int, default=None, help="Optional max images.")
     p_eval.add_argument("--iou", type=float, default=0.5, help="IoU threshold.")
     p_eval.set_defaults(func=cmd_evaluate)
+
+    p_oracle = sub.add_parser("oracle-classify", help="Classify using ground-truth boxes (no detection).")
+    p_oracle.add_argument("--split", choices=["train", "val", "test"], default="test")
+    p_oracle.add_argument("--annotations", type=str, default=None)
+    p_oracle.add_argument("--models", type=str, default=None)
+    p_oracle.add_argument("--limit", type=int, default=None, help="Optional limit on number of GT boxes.")
+    p_oracle.add_argument("--save-errors", type=str, default=None, help="Optional CSV to store misclassifications.")
+    p_oracle.set_defaults(func=cmd_oracle_classify)
+
+    p_oracle_vis = sub.add_parser("oracle-visualize", help="Visualize oracle classification with GT boxes.")
+    p_oracle_vis.add_argument("--split", choices=["train", "val", "test"], default="test")
+    p_oracle_vis.add_argument("--annotations", type=str, default=None)
+    p_oracle_vis.add_argument("--models", type=str, default=None)
+    p_oracle_vis.add_argument("--limit", type=int, default=10, help="How many images to visualize.")
+    p_oracle_vis.add_argument("--output-dir", type=str, default="reports/figures/oracle")
+    p_oracle_vis.add_argument("--show", action="store_true", help="Display images with cv2.imshow.")
+    p_oracle_vis.set_defaults(func=cmd_oracle_visualize)
 
     return parser
 

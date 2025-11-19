@@ -53,6 +53,7 @@ class DetectorParams:
     sliding_window_step_ratio: float = 0.35
     sliding_window_grad_thresh: float = 0.18
     global_nms_iou: float = 0.5
+    max_total_detections: int | None = None
 
 
 class LogoDetector:
@@ -148,6 +149,8 @@ class LogoDetector:
                     dominant.append(det)
             if dominant:
                 final = dominant
+        if params.max_total_detections is not None and len(final) > params.max_total_detections:
+            final = sorted(final, key=lambda d: d[1], reverse=True)[: params.max_total_detections]
         return final
 
     def detect_file(self, image_path: Path, **kwargs) -> List[Tuple[str, float, Tuple[int, int, int, int]]]:
@@ -155,6 +158,18 @@ class LogoDetector:
         if img is None:
             raise FileNotFoundError(image_path)
         return self.detect(img, **kwargs)
+
+    def classify_patch(self, patch: np.ndarray) -> Tuple[str, float]:
+        """Classify a cropped logo patch using the trained SVM."""
+        if patch is None or patch.size == 0:
+            raise ValueError("Empty patch provided.")
+        feat = self._standardized_features(patch)
+        _, pred = self.svm.predict(feat)
+        cls_id = int(pred.ravel()[0])
+        color_score = 1.0
+        if self.class_prototypes:
+            color_score = _color_match_score(patch, self.classes[cls_id], self.class_prototypes)
+        return self.classes[cls_id], float(color_score)
 
     def _standardized_features(self, img: np.ndarray) -> np.ndarray:
         vec = self.extractor.describe(img)
