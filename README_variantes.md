@@ -9,7 +9,7 @@ Este documento describe las tres configuraciones principales que puedes lanzar c
 | **Extracción** | ORB (`nfeatures=1000`) → k-means (Bag of Words, K=400) + histograma HSV (8×8×8) + HOG (bloques 32×32). Cada vector se estandariza (`mu.npy`, `sigma.npy`). |
 | **Clasificador** | `cv2.ml.SVM` (RBF) entrenado sobre los parches recortados (`train-classifier`). |
 | **Filtro binario** | LinearSVC calibrado (scikit-learn) que decide logo vs fondo antes del SVM multiclase (`train-detector`). |
-| **Generadores de candidatos** | MSER, contornos Canny, agrupaciones de keypoints, detectores de texto (gradientes) y sliding windows en varias escalas. |
+| **Generadores de candidatos** | Todo es visión clásica con OpenCV:<br>• **MSER** (`cv2.MSER_create`): detecta regiones extremas estables en intensidad, muy útil para texto/logos.<br>• **Contornos + Canny** (`cv2.Canny`, `cv2.findContours`): obtiene bordes y componentes conectados; filtramos por área y aspecto.<br>• **Agrupaciones de keypoints** (`cv2.ORB_create`): unimos zonas con muchos puntos ORB de alta respuesta.<br>• **Texto por gradientes** (`cv2.Sobel` + morfología): resalta líneas horizontales de texto y cierra huecos con `cv2.morphologyEx`.<br>• **Sliding windows**: barrido clásico en varias escalas usando mapas integrales de gradiente (`cv2.integral`). Ningún módulo usa redes neuronales. |
 | **Re-ranking** | Prototipos de color por clase (`models/color_prototypes.json`) penalizan predicciones cuya paleta no coincide. |
 | **Oracle** | Usa directamente las cajas GT y sólo ejecuta el SVM, sin ninguna etapa de detección. |
 
