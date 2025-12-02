@@ -1,5 +1,3 @@
-"""Feature extraction helpers (ORB + Bag of Visual Words + HSV histograms)."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -31,7 +29,7 @@ class FeatureParams:
 
 
 class FeatureExtractor:
-    """Compute the BoW+HSV descriptor used throughout the project."""
+    """Calcula el descriptor BoW+HSV (y HOG opcional) usado en todo el proyecto."""
 
     def __init__(self, vocab: np.ndarray, params: FeatureParams | None = None):
         self.params = params or FeatureParams()
@@ -43,14 +41,15 @@ class FeatureExtractor:
         self.set_vocabulary(vocab)
 
     def set_vocabulary(self, vocab: np.ndarray) -> None:
+        # Guardamos vocabulario y precálculos para asignar palabras rápido.
         if vocab is None or len(vocab) == 0:
-            raise ValueError("Vocabulary cannot be empty.")
+            raise ValueError("El vocabulario no puede estar vacío.")
         self.vocab = vocab.astype(np.float32)
         self._vocab_T = self.vocab.T
         self._vocab_sq = (self.vocab ** 2).sum(axis=1)
 
     def describe(self, img_bgr: np.ndarray) -> np.ndarray:
-        """Compute the concatenated descriptor and apply Hellinger sqrt."""
+        # Saca BoW + HSV (+ HOG opcional) y aplica raíz de Hellinger.
         if self.params.patch_size is not None:
             img_bgr = cv2.resize(img_bgr, self.params.patch_size, interpolation=cv2.INTER_AREA)
         bow = self._bow_hist(img_bgr)
@@ -90,6 +89,7 @@ class FeatureExtractor:
         return hist
 
     def _hsv_hist(self, img: np.ndarray) -> np.ndarray:
+        # Histograma 3D HSV normalizado; aporta color.
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         hist = cv2.calcHist(
             [hsv],
@@ -105,6 +105,7 @@ class FeatureExtractor:
         return hist
 
     def _hog_features(self, img: np.ndarray) -> np.ndarray | None:
+        # Descriptor HOG opcional; añade textura/forma.
         if self.hog is None:
             return None
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -122,7 +123,7 @@ def train_vocabulary(
     image_paths: Sequence[str],
     params: FeatureParams | None = None,
 ) -> np.ndarray:
-    """Train a BoW vocabulary with ORB descriptors."""
+    # Entrena el vocabulario BoW con ORB sobre los parches.
     params = params or FeatureParams()
     orb = cv2.ORB_create(nfeatures=params.orb_features)
     trainer = cv2.BOWKMeansTrainer(clusterCount=params.vocab_size)
@@ -148,12 +149,12 @@ def train_vocabulary(
 
     if added < params.vocab_size:
         raise RuntimeError(
-            f"Insufficient descriptors: added={added} < vocab_size={params.vocab_size}. "
-            "Increase desc_limit or reduce vocab_size."
+            f"Descriptores insuficientes: añadidos={added} < vocabulario={params.vocab_size}. "
+            "Sube desc_limit o baja vocab_size."
         )
 
     vocab = trainer.cluster().astype(np.float32)
-    print(f"Vocabulary trained with {added} descriptors → shape {vocab.shape}.")
+    print(f"Vocabulario entrenado con {added} descriptores → forma {vocab.shape}.")
     return vocab
 
 
@@ -162,7 +163,7 @@ def build_feature_matrix(
     extractor: FeatureExtractor,
     label2id: Dict[str, int],
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """Build the X/y arrays given a manifest subset."""
+    # Convierte un subconjunto del manifest en matrices X/y.
     feats = []
     labels = []
     for row in df.to_dict("records"):
@@ -180,7 +181,7 @@ def build_feature_matrix(
 
 
 def compute_stats(X: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    """Return mean and std used for feature standardization."""
+    # Media y desviación para estandarizar features.
     mu = X.mean(axis=0, keepdims=True)
     sigma = X.std(axis=0, keepdims=True) + 1e-6
     return mu.astype(np.float32), sigma.astype(np.float32)
@@ -191,6 +192,7 @@ def standardize(X: np.ndarray, mu: np.ndarray, sigma: np.ndarray) -> np.ndarray:
 
 
 def save_vocabulary(vocab: np.ndarray, out_path: Path) -> None:
+    # Guarda el vocabulario en formato FileStorage de OpenCV.
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fs = cv2.FileStorage(str(out_path), cv2.FILE_STORAGE_WRITE)
     fs.write("vocabulary", vocab.astype(np.float32))

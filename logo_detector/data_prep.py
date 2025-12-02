@@ -1,5 +1,3 @@
-"""Data preparation utilities extracted from the original notebooks."""
-
 from __future__ import annotations
 
 import xml.etree.ElementTree as ET
@@ -14,12 +12,12 @@ from . import paths
 
 
 def parse_voc_file(xml_path: Path) -> List[Dict[str, int | str]]:
-    """Parse a Pascal/VOC style annotation file."""
+    # Lee un XML estilo VOC y devuelve filas listas para un CSV.
     rows: List[Dict[str, int | str]] = []
     try:
         tree = ET.parse(xml_path)
     except ET.ParseError as exc:
-        raise RuntimeError(f"Error parsing {xml_path}") from exc
+        raise RuntimeError(f"Error al parsear {xml_path}") from exc
 
     root = tree.getroot()
     filename = root.findtext("filename", default="")
@@ -47,7 +45,7 @@ def parse_voc_file(xml_path: Path) -> List[Dict[str, int | str]]:
 
 
 def parse_split(split_dir: Path, split_name: str) -> List[Dict[str, str | int]]:
-    """Parse all annotations inside a directory."""
+    # Recorre un split (train/val/test) y junta todas sus anotaciones.
     rows: List[Dict[str, str | int]] = []
     for xml_path in sorted(split_dir.rglob("*.xml")):
         try:
@@ -65,7 +63,7 @@ def parse_split(split_dir: Path, split_name: str) -> List[Dict[str, str | int]]:
 def build_annotation_table(
     output_csv: Path | None = None,
 ) -> pd.DataFrame:
-    """Parse the VOC folders and create data/interim/annotations.csv."""
+    # Fusiona todos los XML y genera data/interim/annotations.csv.
     paths.ensure_structure()
     rows: List[Dict[str, str | int]] = []
     for split_name, directory in (
@@ -74,7 +72,7 @@ def build_annotation_table(
         ("test", paths.TEST_DIR),
     ):
         if not directory.exists():
-            print(f"[WARN] {directory} does not exist, skipping.")
+            print(f"[AVISO] {directory} no existe, se omite.")
             continue
         split_rows = parse_split(directory, split_name)
         rows.extend(split_rows)
@@ -82,7 +80,7 @@ def build_annotation_table(
 
     df = pd.DataFrame(rows)
     if df.empty:
-        raise RuntimeError("No annotations were found.")
+        raise RuntimeError("No se encontraron anotaciones.")
 
     output_csv = output_csv or paths.ANNOTATIONS_CSV
     output_csv.parent.mkdir(parents=True, exist_ok=True)
@@ -97,14 +95,14 @@ def crop_logo_patches(
     max_per_class: int | None = None,
     output_manifest: Path | None = None,
 ) -> pd.DataFrame:
-    """Crop patches for every annotation and build a manifest."""
+    # Recorta cada logo anotado, lo guarda a disco y registra su ruta.
     paths.ensure_structure()
     annotations_csv = annotations_csv or paths.ANNOTATIONS_CSV
     output_manifest = output_manifest or paths.PATCH_MANIFEST
 
     df = pd.read_csv(annotations_csv)
     if df.empty:
-        raise RuntimeError("Annotation CSV is empty.")
+        raise RuntimeError("El CSV de anotaciones está vacío.")
 
     patch_dir = paths.PATCH_DIR
     patch_dir.mkdir(parents=True, exist_ok=True)
@@ -118,7 +116,7 @@ def crop_logo_patches(
             continue
         img = cv2.imread(row["path"])
         if img is None:
-            print(f"[WARN] Could not read {row['path']}")
+            print(f"[AVISO] No se pudo leer {row['path']}")
             continue
         h, w = img.shape[:2]
         x1 = max(0, min(int(row["xmin"]), w - 1))
@@ -148,7 +146,7 @@ def crop_logo_patches(
 
     manifest_df = pd.DataFrame(manifest)
     if manifest_df.empty:
-        raise RuntimeError("No patches were created.")
+        raise RuntimeError("No se crearon parches.")
 
     manifest_df.to_csv(output_manifest, index=False)
     print(f"Saved {len(manifest_df)} patches to {output_manifest.resolve()}")

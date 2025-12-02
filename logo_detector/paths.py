@@ -1,5 +1,3 @@
-"""Centralized filesystem paths used across the project."""
-
 from pathlib import Path
 
 
@@ -22,7 +20,7 @@ PATCH_MANIFEST = PROCESSED_DIR / "patches_manifest.csv"
 
 
 def ensure_structure() -> None:
-    """Create the directories that store derived artifacts if needed."""
+    # Crea carpetas de artefactos si no existen; evita reventar al guardar.
     for path in (
         INTERIM_DIR,
         PROCESSED_DIR,

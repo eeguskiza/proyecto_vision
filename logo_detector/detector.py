@@ -1,4 +1,4 @@
-"""Logo detection helpers based on MSER proposals + SVM classification."""
+"""Utilidades de detección de logos basadas en MSER y clasificación SVM."""
 
 from __future__ import annotations
 
@@ -28,13 +28,19 @@ CandidateFn = Callable[[np.ndarray], List[Tuple[int, int, int, int]]]
 
 @dataclass
 class DetectorParams:
-    pad: float = 0.1
-    min_keypoints: int = 8
+    pad: float = 0.12
+    min_keypoints: int = 10
     top_k_per_class: int = 1
-    bin_threshold: float = 0.85
+    bin_threshold: float = 0.9
     candidate_mode: str = "combined"  # 'mser' or 'combined'
     limit_images: int | None = None
     iou_threshold: float = 0.5
+    min_variance: float = 12.0
+    min_area_ratio: float = 0.005
+    max_area_ratio: float = 0.3
+    min_aspect_ratio: float = 0.25
+    max_aspect_ratio: float = 4.0
+    min_saturation: float = 15.0
     mser_scales: Tuple[float, ...] = (1.0, 0.85, 0.7)
     contour_scales: Tuple[float, ...] = (1.0, 0.75, 0.6, 0.5)
     keypoint_scales: Tuple[float, ...] = (1.0, 0.7, 0.5)
@@ -44,16 +50,14 @@ class DetectorParams:
     use_sliding_windows: bool = True
     sliding_window_sizes: Tuple[Tuple[int, int], ...] = (
         (160, 120),
-        (200, 150),
-        (260, 180),
-        (320, 220),
-        (420, 280),
-        (520, 320),
+        (220, 160),
+        (300, 200),
+        (380, 240),
     )
     sliding_window_step_ratio: float = 0.35
-    sliding_window_grad_thresh: float = 0.18
-    global_nms_iou: float = 0.5
-    max_total_detections: int | None = None
+    sliding_window_grad_thresh: float = 0.2
+    global_nms_iou: float = 0.35
+    max_total_detections: int | None = 2
 
 
 class LogoDetector:
@@ -63,9 +67,10 @@ class LogoDetector:
         self,
         models_dir: Path | None = None,
         feature_params: FeatureParams | None = None,
-        candidate_preset: str = "loose",
+        candidate_preset: str = "strict",
         load_binary: bool = True,
     ):
+        # Carga vocabulario, SVM, estadísticas y filtro binario listos para usar.
         self.models_dir = Path(models_dir or paths.MODELS_DIR)
         self.feature_params = feature_params or FeatureParams()
         self.vocab = load_vocabulary(self.models_dir / "bow_dict.yml")
@@ -79,7 +84,7 @@ class LogoDetector:
         self.binary_filter = None
         if load_binary and self.binary_model_path.exists():
             self.binary_filter = joblib.load(self.binary_model_path)
-            print(f"[INFO] Binary filter loaded from {self.binary_model_path}")
+            print(f"[INFO] Filtro binario cargado desde {self.binary_model_path}")
         self._mser = _build_mser(preset=candidate_preset)
         self.class_prototypes = _load_color_prototypes(self.models_dir / "color_prototypes.json")
 
@@ -88,20 +93,36 @@ class LogoDetector:
         img_bgr: np.ndarray,
         params: DetectorParams | None = None,
         candidate_fn: CandidateFn | None = None,
+        classify: bool = True,
     ) -> List[Tuple[str, float, Tuple[int, int, int, int]]]:
+        # Genera candidatos, filtra logo/no-logo y (si toca) etiqueta la clase.
         params = params or DetectorParams()
         boxes = candidate_fn(img_bgr) if candidate_fn else self._generate_candidates(img_bgr, params)
         H, W = img_bgr.shape[:2]
         gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+        classes = self.classes if classify else ["logo"]
 
         detections: List[Tuple[int, float, Tuple[int, int, int, int]]] = []
         for (x1, y1, x2, y2) in boxes:
             x1, y1, x2, y2 = pad_box((x1, y1, x2, y2), H, W, pad=params.pad)
+            w = max(1, x2 - x1)
+            h = max(1, y2 - y1)
+            area_ratio = (w * h) / float(H * W)
+            if area_ratio < params.min_area_ratio or area_ratio > params.max_area_ratio:
+                continue
+            ar = w / float(h)
+            if ar < params.min_aspect_ratio or ar > params.max_aspect_ratio:
+                continue
             patch = img_bgr[y1:y2, x1:x2]
             if patch.size == 0:
                 continue
 
             patch_gray = gray[y1:y2, x1:x2]
+            if patch_gray.var() < params.min_variance:
+                continue
+            sat = cv2.cvtColor(patch, cv2.COLOR_BGR2HSV)[:, :, 1].mean()
+            if sat < params.min_saturation:
+                continue
             kps = self.extractor.orb.detect(patch_gray, None)
             if not kps or len(kps) < params.min_keypoints:
                 continue
@@ -118,11 +139,14 @@ class LogoDetector:
                 if p_logo < thr:
                     continue
 
-            _, pred = self.svm.predict(feat)
-            cls_id = int(pred.ravel()[0])
             resp = float(np.mean([kp.response for kp in kps]))
+            cls_id = 0
             score = p_logo * max(1e-3, resp) * len(kps)
-            if self.class_prototypes:
+
+            if classify:
+                _, pred = self.svm.predict(feat)
+                cls_id = int(pred.ravel()[0])
+            if classify and self.class_prototypes:
                 color_score = _color_match_score(patch, self.classes[cls_id], self.class_prototypes)
                 score *= color_score
             detections.append((cls_id, score, (x1, y1, x2, y2)))
@@ -133,7 +157,8 @@ class LogoDetector:
             cls_scores = [d[1] for d in detections if d[0] == cls_id]
             keep = nms(cls_boxes, cls_scores, iou_thr=0.4)[: params.top_k_per_class]
             for idx in keep:
-                final.append((self.classes[cls_id], cls_scores[idx], cls_boxes[idx]))
+                label = classes[cls_id] if classify else "logo"
+                final.append((label, cls_scores[idx], cls_boxes[idx]))
         if params.global_nms_iou > 0 and len(final) > 1:
             boxes = [d[2] for d in final]
             scores = [d[1] for d in final]
@@ -153,14 +178,14 @@ class LogoDetector:
             final = sorted(final, key=lambda d: d[1], reverse=True)[: params.max_total_detections]
         return final
 
-    def detect_file(self, image_path: Path, **kwargs) -> List[Tuple[str, float, Tuple[int, int, int, int]]]:
+    def detect_file(self, image_path: Path, classify: bool = True, **kwargs) -> List[Tuple[str, float, Tuple[int, int, int, int]]]:
         img = cv2.imread(str(image_path))
         if img is None:
             raise FileNotFoundError(image_path)
-        return self.detect(img, **kwargs)
+        return self.detect(img, classify=classify, **kwargs)
 
     def classify_patch(self, patch: np.ndarray) -> Tuple[str, float]:
-        """Classify a cropped logo patch using the trained SVM."""
+        # Clasifica un parche recortado con el SVM multiclase.
         if patch is None or patch.size == 0:
             raise ValueError("Empty patch provided.")
         feat = self._standardized_features(patch)
@@ -196,7 +221,7 @@ class LogoDetector:
                     )
                 )
         if cfg.candidate_mode not in ("mser", "combined"):
-            raise ValueError(f"Unknown candidate mode '{cfg.candidate_mode}'")
+            raise ValueError(f"Modo de candidatos desconocido '{cfg.candidate_mode}'")
         return _deduplicate_boxes(boxes)
 
 
@@ -209,7 +234,7 @@ def train_binary_filter(
     candidate_mode: str = "combined",
     seed: int = 42,
 ) -> Dict[str, float]:
-    """Train the LinearSVC-based binary filter that prunes proposals."""
+    # Entrena un LinearSVC calibrado (logo vs fondo) sobre propuestas.
     annotations_csv = annotations_csv or paths.ANNOTATIONS_CSV
     models_dir = Path(models_dir or paths.MODELS_DIR)
     detector = LogoDetector(models_dir=models_dir, load_binary=False)
@@ -258,7 +283,7 @@ def train_binary_filter(
             neg_added += 1
 
     if not candidates:
-        raise RuntimeError("No samples collected for the binary filter.")
+        raise RuntimeError("No se reunieron muestras para el filtro binario.")
 
     X = np.vstack(candidates).astype(np.float32)
     y = np.array(labels, dtype=np.int32)
@@ -291,7 +316,7 @@ def train_binary_filter(
     prec, rec, f1, _ = precision_recall_fscore_support(yva, (probs >= 0.5).astype(int), average="binary")
 
     joblib.dump(clf, models_dir / "logo_filter.joblib")
-    print(f"Binary filter saved to {models_dir / 'logo_filter.joblib'}")
+    print(f"Filtro binario guardado en {models_dir / 'logo_filter.joblib'}")
 
     return {"ap": float(ap), "precision": float(prec), "recall": float(rec), "f1": float(f1), "samples": float(len(X))}
 
@@ -302,11 +327,12 @@ def evaluate_detector(
     split: str = "test",
     params: DetectorParams | None = None,
 ) -> Dict[str, float]:
+    # Calcula P/R/F1 comparando detecciones con GT del split indicado.
     annotations_csv = annotations_csv or paths.ANNOTATIONS_CSV
     df = pd.read_csv(annotations_csv)
     split_df = df[df["split"] == split].copy()
     if split_df.empty:
-        raise RuntimeError(f"No samples found for split '{split}'.")
+        raise RuntimeError(f"No se encontraron muestras para el split '{split}'.")
     params = params or DetectorParams()
     paths_list = split_df["path"].unique().tolist()
     if params.limit_images:
@@ -338,16 +364,17 @@ def evaluate_detector(
     recall = TP / max(1, TP + FN)
     f1 = 2 * precision * recall / max(1e-6, precision + recall)
     metrics = {"precision": precision, "recall": recall, "f1": f1, "TP": TP, "FP": FP, "FN": FN}
-    print(f"Evaluation → P={precision:.3f} R={recall:.3f} F1={f1:.3f} (TP={TP} FP={FP} FN={FN})")
+    print(f"Evaluación → P={precision:.3f} R={recall:.3f} F1={f1:.3f} (TP={TP} FP={FP} FN={FN})")
     return metrics
 
 
-def _build_mser(preset: str = "loose"):
+def _build_mser(preset: str = "strict"):
     cfg = {
+        "strict": dict(delta=6, min_area=120, max_area=20000),
         "tight": dict(delta=6, min_area=150, max_area=18000),
-        "loose": dict(delta=4, min_area=50, max_area=35000),
         "balanced": dict(delta=5, min_area=80, max_area=25000),
-    }.get(preset, dict(delta=5, min_area=80, max_area=25000))
+        "loose": dict(delta=4, min_area=50, max_area=35000),
+    }.get(preset, dict(delta=6, min_area=120, max_area=20000))
     try:
         return cv2.MSER_create(_delta=cfg["delta"], _min_area=cfg["min_area"], _max_area=cfg["max_area"])
     except TypeError:

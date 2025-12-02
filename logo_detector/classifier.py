@@ -1,5 +1,3 @@
-"""Training routine for the BoW + HSV multi-class SVM."""
-
 from __future__ import annotations
 
 import json
@@ -23,6 +21,7 @@ from .features import (
 
 
 def stratified_split(df: pd.DataFrame, val_fraction: float, seed: int) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    # Divide train/val manteniendo proporción por clase.
     rng = np.random.default_rng(seed)
     parts = []
     for cls, sub in df.groupby("class"):
@@ -42,7 +41,7 @@ def train_classifier(
     val_fraction: float = 0.2,
     seed: int = 42,
 ) -> Dict[str, float]:
-    """Train the BoW+HSV classifier and persist its artifacts under models/."""
+    # Entrena el SVM multiclase y guarda vocab, stats, modelo y prototipos.
     paths.ensure_structure()
     manifest_csv = manifest_csv or paths.PATCH_MANIFEST
     params = params or FeatureParams()
@@ -56,7 +55,7 @@ def train_classifier(
     label2id = {cls: i for i, cls in enumerate(classes)}
 
     train_df, val_df = stratified_split(pool, val_fraction=val_fraction, seed=seed)
-    print(f"Train={len(train_df)} | Val={len(val_df)} | Classes={len(classes)}")
+    print(f"Train={len(train_df)} | Val={len(val_df)} | Clases={len(classes)}")
 
     vocab = train_vocabulary(train_df["patch_path"].tolist(), params=params)
     save_vocabulary(vocab, paths.MODELS_DIR / "bow_dict.yml")
@@ -69,7 +68,7 @@ def train_classifier(
     Xva_s = standardize(Xva, mu, sigma)
     np.save(paths.MODELS_DIR / "mu.npy", mu)
     np.save(paths.MODELS_DIR / "sigma.npy", sigma)
-    print(f"Feature stats saved to {paths.MODELS_DIR}")
+    print(f"Estadísticas de features guardadas en {paths.MODELS_DIR}")
 
     def train_eval(C: float, gamma: float):
         svm = cv2.ml.SVM_create()
@@ -96,7 +95,7 @@ def train_classifier(
 
     best_acc, best_C, best_gamma, best_svm = best
     if best_svm is None:
-        raise RuntimeError("Failed to train SVM.")
+        raise RuntimeError("Falló el entrenamiento del SVM.")
 
     svm_path = paths.MODELS_DIR / "svm_bow_hsv_hellinger.xml"
     best_svm.save(str(svm_path))
@@ -117,16 +116,17 @@ def train_classifier(
         "val_samples": float(len(val_df)),
     }
 
-    print(f"Model saved to {svm_path}")
-    print(f"Label order saved to {paths.MODELS_DIR / 'labels.json'}")
-    print(f"Confusion matrix saved to {cm_path}")
+    print(f"Modelo guardado en {svm_path}")
+    print(f"Orden de clases guardado en {paths.MODELS_DIR / 'labels.json'}")
+    print(f"Matriz de confusión guardada en {cm_path}")
     proto_path = paths.MODELS_DIR / "color_prototypes.json"
     build_color_prototypes(train_df, proto_path)
-    print(f"Color prototypes saved to {proto_path}")
+    print(f"Prototipos de color guardados en {proto_path}")
     return metrics
 
 
 def _confusion_matrix(model: cv2.ml_SVM, X: np.ndarray, y_true: np.ndarray, n_classes: int) -> np.ndarray:
+    # Matriz de confusión sencilla para el split de validación.
     _, pred = model.predict(X)
     pred = pred.astype(np.int32).ravel()
     cm = np.zeros((n_classes, n_classes), dtype=int)
@@ -136,6 +136,7 @@ def _confusion_matrix(model: cv2.ml_SVM, X: np.ndarray, y_true: np.ndarray, n_cl
 
 
 def build_color_prototypes(df: pd.DataFrame, out_path: Path) -> None:
+    # Promedia histogramas HSV por clase para re-ranking por color.
     prototypes = {}
     for cls, sub in df.groupby("class"):
         hists = []
